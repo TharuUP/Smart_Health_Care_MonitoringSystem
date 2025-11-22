@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="settings-container">
+    
+    <!-- ===== LEFT SIDEBAR ===== -->
+    <aside class="settings-sidebar">
+        <h4>Account Settings</h4>
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="{% url 'settings' %}">
+                <i class="ph-bold ph-user"></i>
+                Profile Settings
+            </a>
+            
+            <!-- THIS IS THE PASSWORD LINK -->
+            <a class="nav-link" href="{% url 'password-settings' %}">
+                <i class="ph-bold ph-lock"></i>
+                Password
+            </a>
+            
+            <a class="nav-link" href="{% url 'doctor-dashboard' %}">
+                <i class="ph-bold ph-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ===== MAIN CONTENT FORM ===== -->
+    <main class="settings-content">
+        <div class="settings-card">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="profile-pic-section">
+                    <label for="profile_photo_input" class="profile-pic-container" title="Click to upload">
+                        {% if doctor.profile_photo %}
+                            <img src="{{ doctor.profile_photo.url }}" alt="Profile Photo" id="profile_pic_preview">
+                        {% else %}
+                            <img src="https://placehold.co/100x100/E2E8F0/718096?text=Dr." alt="Profile Photo" id="profile_pic_preview">
+                        {% endif %}
+                        <div class="profile-pic-overlay"><i class="ph ph-camera"></i> Change</div>
+                    </label>
+                    <input type="file" name="profile_photo" id="profile_photo_input" accept="image/*" onchange="previewImage(event)">
+                    
+                    <div>
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('profile_photo_input').click();">
+                            Upload New
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_number">Mobile Number</label>
+                        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ doctor.contact_number|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="specialty">Specialty / Position</label>
+                        <input type="text" class="form-control" id="specialty" name="specialty" value="{{ doctor.specialty|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="working_hours">Working Hours</label>
+                        <input type="text" class="form-control" id="working_hours" name="working_hours" value="{{ doctor.working_hours|default:'' }}" placeholder="e.g., 9am - 5pm">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date_of_birth">Date of Birth</label>
+                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ doctor.date_of_birth|date:'Y-m-d'|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="blood_type">Blood Type</label>
+                        <input type="text" class="form-control" id="blood_type" name="blood_type" value="{{ doctor.blood_type|default:'' }}" placeholder="e.g., A+">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+{% block navbar %}{% endblock %}
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('profile_pic_preview');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+{% endblock %}

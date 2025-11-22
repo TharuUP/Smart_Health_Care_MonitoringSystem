@@ -1,0 +1,19 @@
+Security: Never upload these!
+
+.env
+db.sqlite3
+
+Python generated files
+
+pycache/
+*.py[cod]
+*$py.class
+
+Virtual Environment
+
+venv/
+env/
+
+Media (Optional: don't upload user photos to code repo)
+
+media/

@@ -1,0 +1,120 @@
+/* static/css/settings.css */
+
+.settings-container {
+    display: flex;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif; /* A nice, clean font */
+}
+
+/* --- Left Sidebar --- */
+.settings-sidebar {
+    width: 280px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-right: 1px solid #e0e0e0;
+}
+.settings-sidebar h4 {
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+.settings-sidebar .nav-link {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+.settings-sidebar .nav-link i {
+    font-size: 1.2rem;
+}
+.settings-sidebar .nav-link.active,
+.settings-sidebar .nav-link:hover {
+    background-color: #f1f5f9;
+    color: #0d6efd;
+}
+
+/* --- Main Content Area --- */
+.settings-content {
+    flex: 1;
+    padding: 40px;
+}
+
+.settings-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    padding: 30px;
+}
+
+/* Profile Picture Section */
+.profile-pic-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+.profile-pic-container {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background-color: #eee;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.profile-pic-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* This is a hidden file input */
+#profile_photo_input {
+    display: none;
+}
+
+/* Form Layout */
+.form-row {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 20px;
+}
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #333;
+}
+.form-group .form-control {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+.form-group .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+    outline: none;
+}
+.form-group-full {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.form-actions {
+    text-align: right;
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+    margin-top: 30px;
+}

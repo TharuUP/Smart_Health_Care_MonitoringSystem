@@ -1,0 +1,221 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+<style>
+    /* Force full screen layout override */
+    .container, .container-fluid { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .mt-4 { margin-top: 0 !important; }
+    nav.navbar { display: none !important; }
+    
+    /* Admin Gradient (Deep Slate - Professional Look) */
+    .sidebar-gradient {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+</style>
+
+<div class="flex h-screen bg-gray-50 font-sans overflow-hidden">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-64 sidebar-gradient text-white flex flex-col py-8 px-4 shadow-2xl z-50 flex-shrink-0">
+        
+        <!-- Admin Profile Snippet -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-20 h-20 rounded-full border-4 border-white/10 bg-white/5 flex items-center justify-center mb-3 shadow-lg">
+                <i class="ph-fill ph-shield-check text-4xl text-blue-400"></i>
+            </div>
+            <h3 class="text-lg font-bold tracking-wide">Administrator</h3>
+            <p class="text-slate-400 text-xs uppercase tracking-widest mt-1">System Control</p>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-col gap-2 flex-1 px-2">
+            <div class="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Overview</div>
+            
+            <!-- Active Link -->
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-blue-600/20 text-blue-300 rounded-lg text-sm font-bold shadow-sm border-l-4 border-blue-500 transition-all">
+                <i class="ph-bold ph-squares-four text-lg"></i> Dashboard
+            </a>
+            
+            <div class="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-4 mb-1">Database Control</div>
+
+            <a href="{% url 'admin-doctors' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:bg-white/10 hover:text-white rounded-lg transition text-sm group">
+                <i class="ph-bold ph-stethoscope text-lg group-hover:text-blue-400"></i> Manage Doctors
+            </a>
+            
+            <a href="{% url 'admin-patients' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:bg-white/10 hover:text-white rounded-lg transition text-sm group">
+                <i class="ph-bold ph-users text-lg group-hover:text-purple-400"></i> Manage Patients
+            </a>
+            
+            <a href="{% url 'admin-users' %}" class="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:bg-white/10 hover:text-white rounded-lg transition text-sm group">
+                <i class="ph-bold ph-database text-lg group-hover:text-green-400"></i> Full Database
+            </a>
+        </nav>
+
+        <!-- Logout -->
+        <a href="{% url 'logout-page' %}" class="flex items-center gap-3 px-3 py-2.5 text-red-300 hover:bg-red-900/30 hover:text-red-100 rounded-lg transition mt-auto text-sm border border-transparent hover:border-red-900/50">
+            <i class="ph-bold ph-sign-out text-lg"></i> Logout
+        </a>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="flex-1 overflow-y-auto p-8 lg:p-10">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-end mb-10">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-1" style="font-family: 'DM Serif Display', serif;">System Overview</h1>
+                <p class="text-gray-500 font-medium">Welcome back, Admin.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-2 bg-white rounded-full border border-gray-200 text-xs font-bold text-gray-600 shadow-sm flex items-center gap-2">
+                    <i class="ph-fill ph-calendar-blank text-gray-400"></i> {{ today_date|date:"M d, Y" }}
+                </span>
+                {% if system_status == "Online" %}
+                    <span class="px-4 py-2 bg-green-50 text-green-700 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm border border-green-200">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        IoT Online
+                    </span>
+                {% else %}
+                    <span class="px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm border border-gray-200">
+                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span> IoT Idle
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Doctors -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between group hover:border-blue-200 hover:shadow-md transition cursor-default">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Doctors</p>
+                    <h4 class="text-3xl font-bold text-gray-900">{{ total_doctors }}</h4>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+                    <i class="ph-fill ph-stethoscope"></i>
+                </div>
+            </div>
+            
+            <!-- Patients -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between group hover:border-purple-200 hover:shadow-md transition cursor-default">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Patients</p>
+                    <h4 class="text-3xl font-bold text-gray-900">{{ total_patients }}</h4>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+                    <i class="ph-fill ph-users"></i>
+                </div>
+            </div>
+
+            <!-- Prescriptions -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between group hover:border-orange-200 hover:shadow-md transition cursor-default">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Prescriptions</p>
+                    <h4 class="text-3xl font-bold text-gray-900">{{ total_prescriptions }}</h4>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+                    <i class="ph-fill ph-pill"></i>
+                </div>
+            </div>
+
+            <!-- Data Points -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between group hover:border-teal-200 hover:shadow-md transition cursor-default">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Data Points</p>
+                    <h4 class="text-3xl font-bold text-gray-900">{{ total_readings }}</h4>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+                    <i class="ph-fill ph-database"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY TABLE -->
+        <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="font-bold text-xl text-gray-900">Recently Joined Users</h3>
+                    <p class="text-sm text-gray-500">Latest user registrations in the system</p>
+                </div>
+                <a href="/admin/auth/user/" target="_blank" class="px-5 py-2.5 bg-gray-50 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-100 transition border border-gray-200 flex items-center gap-2">
+                    <i class="ph-bold ph-user-gear"></i> Manage All Users
+                </a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 text-xs uppercase text-gray-500 font-bold border-b border-gray-100">
+                        <tr>
+                            <th class="p-4 rounded-tl-xl">Username</th>
+                            <th class="p-4">Role</th>
+                            <th class="p-4">Date Joined</th>
+                            <th class="p-4 rounded-tr-xl text-right">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm font-medium text-gray-700">
+                        {% for u in recent_users %}
+                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition last:border-0">
+                            <td class="p-4 text-gray-900 flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xs text-gray-600 font-bold border border-gray-200">
+                                    {{ u.username|first|upper }}
+                                </div>
+                                {{ u.username }}
+                            </td>
+                            <td class="p-4">
+                                {% if u.role_type == 'admin' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-[10px] font-bold uppercase border border-slate-200">
+                                        <i class="ph-fill ph-shield-star"></i> Admin
+                                    </span>
+                                {% elif u.role_type == 'doctor' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-[10px] font-bold uppercase border border-blue-100">
+                                        <i class="ph-fill ph-stethoscope"></i> Doctor
+                                    </span>
+                                {% elif u.role_type == 'patient' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-md text-[10px] font-bold uppercase border border-purple-100">
+                                        <i class="ph-fill ph-user"></i> Patient
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold uppercase border border-gray-200">
+                                        Staff
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-gray-500">{{ u.date_joined|date:"M d, Y" }}</td>
+                            <td class="p-4 text-right">
+                                {% if u.is_active %}
+                                    <span class="inline-flex items-center gap-1.5 text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded-lg">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded-lg">
+                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="p-8 text-center text-gray-400">No users found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

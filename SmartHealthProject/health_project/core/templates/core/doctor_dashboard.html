@@ -1,0 +1,377 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { primary: '#4c6ef8', bgLight: '#f3f4f8', textDark: '#2d3748', textGray: '#a0aec0' },
+                fontFamily: { sans: ['Inter', 'sans-serif'] },
+                boxShadow: { 'card': '0 4px 20px rgba(0, 0, 0, 0.03)' }
+            }
+        }
+    }
+</script>
+
+<!-- === FIX: Full Screen Layout === -->
+<style>
+    .container, .container-fluid { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .mt-4 { margin-top: 0 !important; }
+    nav.navbar { display: none !important; }
+    
+    /* Sidebar Gradient (Same as Patient) */
+    .sidebar-gradient {
+        background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+</style>
+
+<div class="min-h-screen bg-bgLight flex flex-col lg:flex-row font-sans text-textDark">
+
+    <!-- ===== LEFT SIDEBAR (New Gradient Style) ===== -->
+    <aside class="w-64 sidebar-gradient text-white flex flex-col py-8 px-4 shadow-2xl z-50 flex-shrink-0">
+        
+        <!-- Profile Snippet -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-20 h-20 rounded-full border-4 border-white/30 overflow-hidden mb-3 shadow-lg">
+                {% if doctor.profile_photo %}
+                    <img src="{{ doctor.profile_photo.url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <img src="https://placehold.co/100x100/ffffff/2563eb?text=Dr" class="w-full h-full object-cover">
+                {% endif %}
+            </div>
+            <h3 class="text-base font-bold text-center">Dr. {{ user.first_name }} {{ user.last_name }}</h3>
+            <p class="text-blue-200 text-xs uppercase tracking-widest mt-1">{{ doctor.specialty|default:"Specialist" }}</p>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-col gap-2 flex-1 px-2">
+            <div class="px-3 py-2 text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Main Menu</div>
+            
+            <!-- Dashboard (Active) -->
+            <a href="{% url 'doctor-dashboard' %}" class="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl text-white font-medium shadow-sm border-l-4 border-white transition-all">
+                <i class="ph-bold ph-squares-four text-xl"></i> Dashboard
+            </a>
+            
+            <!-- Settings -->
+            <a href="{% url 'settings' %}" class="flex items-center gap-3 px-4 py-3 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl transition-all font-medium">
+                <i class="ph-bold ph-gear text-xl"></i> Settings
+            </a>
+        </nav>
+
+        <!-- Logout -->
+        <a href="{% url 'logout-page' %}" class="flex items-center gap-3 px-4 py-3 text-blue-200 hover:text-white hover:bg-white/10 rounded-xl transition mt-auto">
+            <i class="ph-bold ph-sign-out text-xl"></i> Logout
+        </a>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-6 flex flex-col gap-6 overflow-x-hidden">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center">
+            <div class="bg-white px-4 py-2 rounded-full flex items-center gap-3 w-full max-w-lg shadow-card">
+                <i class="ph ph-users text-textGray text-lg"></i>
+                <select id="patientSelector" onchange="switchPatient()" class="w-full bg-transparent outline-none text-sm font-medium cursor-pointer text-textDark">
+                    <option value="all">Select Patient to View Data...</option>
+                    {% for p in patients %}
+                        <option value="{{ p.id }}">{{ p.user.first_name }} {{ p.user.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </header>
+
+        <!-- Banner -->
+        <div class="relative bg-gradient-to-r from-primary to-[#3b5bdb] rounded-[20px] p-6 text-white h-44 flex items-center overflow-hidden shadow-card">
+            <div class="z-10">
+                <h2 class="text-2xl font-bold mb-1">Good Day, Dr. {{ user.last_name }}!</h2>
+                <p class="opacity-90 text-sm">Have a Nice {{ today_date_display }}!</p>
+            </div>
+            <img src="{% static 'images/doctor-cartoon.png' %}" class="absolute right-12 top-1/2 transform -translate-y-1/2 h-40 w-auto object-contain">
+        </div>
+
+        <!-- SENSOR DATA CARDS -->
+        <div class="grid grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-[20px] shadow-card flex flex-col justify-between h-36">
+                <h5 class="text-[10px] font-bold text-textGray uppercase tracking-wider">HEART RATE</h5>
+                <div><div class="text-4xl font-bold text-textDark" id="card-hr">--</div><p class="text-xs text-textGray mt-1">BPM</p></div>
+            </div>
+            <div class="bg-white p-4 rounded-[20px] shadow-card flex flex-col justify-between h-36">
+                <h5 class="text-[10px] font-bold text-textGray uppercase tracking-wider">BODY TEMP</h5>
+                <div><div class="text-4xl font-bold text-textDark" id="card-temp">--</div><p class="text-xs text-textGray mt-1">°C</p></div>
+            </div>
+            <div class="bg-white p-4 rounded-[20px] shadow-card flex flex-col justify-between h-36">
+                <h5 class="text-[10px] font-bold text-textGray uppercase tracking-wider">ROOM ENV</h5>
+                <div><div class="text-4xl font-bold text-textDark" id="card-env">--</div><p class="text-xs text-textGray mt-1">Temp & Humidity</p></div>
+            </div>
+        </div>
+
+        <!-- DYNAMIC PATIENT SECTION -->
+        <div class="flex gap-4 h-full">
+            <!-- Left: Patient Details -->
+            <div class="flex-1 bg-white p-5 rounded-[20px] shadow-card">
+                <h4 class="font-bold text-base mb-3">Patient Profile</h4>
+                
+                <div id="profile-empty" class="h-40 flex flex-col items-center justify-center text-textGray">
+                    <i class="ph ph-user-focus text-3xl mb-2"></i><p class="text-sm">Select a patient</p>
+                </div>
+                
+                <div id="profile-content" class="hidden">
+                    <div class="flex items-center gap-4 mb-4 border-b border-gray-50 pb-4">
+                        
+                        <!-- PHOTO CONTAINER -->
+                        <div class="relative w-14 h-14 rounded-full overflow-hidden bg-blue-100 border-2 border-white shadow-sm flex-shrink-0">
+                            <!-- Initial (Default) -->
+                            <div id="p-initial-container" class="w-full h-full flex items-center justify-center text-xl font-bold text-primary">--</div>
+                            <!-- Image (Hidden by default) -->
+                            <img id="p-photo" src="" class="w-full h-full object-cover hidden">
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-textDark" id="p-name">--</h3>
+                            <p class="text-xs text-textGray" id="p-age">--</p>
+                        </div>
+                        <!-- Status Badge -->
+                        <div class="ml-auto">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500" id="p-status-badge">Unknown</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 6 Details Grid -->
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <div class="flex flex-col"><span class="text-[10px] text-textGray uppercase font-bold">Condition</span><span class="font-bold text-sm text-textDark" id="p-condition">--</span></div>
+                        <div class="flex flex-col"><span class="text-[10px] text-textGray uppercase font-bold">Work</span><span class="font-bold text-sm text-textDark" id="p-occupation">--</span></div>
+                        <div class="flex flex-col"><span class="text-[10px] text-textGray uppercase font-bold">Blood</span><span class="font-bold text-sm text-textDark" id="p-blood">--</span></div>
+                        
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-xl col-span-2">
+                            <span class="text-textGray text-xs">Contact</span><span class="font-bold text-sm" id="p-contact">--</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded-xl col-span-2">
+                            <span class="text-textGray text-xs">Address</span><span class="font-bold text-sm truncate max-w-[150px]" id="p-address">--</span>
+                        </div>
+                        
+                        <div class="col-span-2 mt-2">
+                            <a id="p-history-link" href="#" class="block w-full text-center bg-blue-50 text-primary py-2 rounded-xl text-xs font-bold hover:bg-blue-100 transition">View Full History & Prescriptions</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Clinical Notes -->
+            <div class="flex-1 bg-white p-5 rounded-[20px] shadow-card flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-base">Clinical Notes</h4>
+                </div>
+                <div id="notes-list" class="flex-1 overflow-y-auto max-h-52 space-y-2 mb-2 pr-1">
+                    <p class="text-center text-xs text-textGray mt-10">Select a patient to view notes.</p>
+                </div>
+                <div id="note-input-area" class="hidden border-t pt-2 flex gap-2">
+                    <input type="text" id="newNoteInput" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-primary" placeholder="Add a note...">
+                    <button onclick="addNote()" class="bg-primary text-white w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[#3b5bdb]"><i class="ph-bold ph-paper-plane-right text-sm"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR (Doctor Profile) -->
+    <aside class="hidden lg:flex flex-col w-80 p-4 h-screen sticky top-0 overflow-y-auto gap-4 border-l border-gray-100 bg-white/50 flex-shrink-0">
+        
+        <!-- PROFILE CARD -->
+        <div class="bg-white rounded-[20px] shadow-card overflow-hidden pb-5">
+            <div class="h-20 bg-[#0d6efd] w-full relative"></div>
+            <div class="relative -mt-10 flex justify-center mb-3">
+                <div class="w-20 h-20 rounded-full border-[4px] border-white overflow-hidden bg-white shadow-sm">
+                    {% if doctor.profile_photo %}
+                        <img src="{{ doctor.profile_photo.url }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <img src="https://placehold.co/100x100/E2E8F0/718096?text=Dr" class="w-full h-full object-cover">
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="px-5 text-center mb-4">
+                <h5 class="text-lg font-bold text-textDark mb-0.5">Dr. {{ user.first_name }} {{ user.last_name }}</h5>
+                <p class="text-[10px] text-blue-500 font-bold uppercase tracking-wide">{{ doctor.specialty|default:"Specialist" }}</p>
+            </div>
+
+            <div class="px-5 flex flex-col gap-2">
+                <div class="flex justify-between items-center py-1.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2 text-textGray text-[10px] font-bold uppercase tracking-wider"><i class="ph-fill ph-envelope-simple"></i> Email</div>
+                    <span class="text-xs font-semibold text-textDark truncate max-w-[120px]" title="{{ user.email }}">{{ user.email|default:"--" }}</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2 text-textGray text-[10px] font-bold uppercase tracking-wider"><i class="ph-fill ph-calendar"></i> Born</div>
+                    <span class="text-xs font-semibold text-textDark">{{ doctor.date_of_birth|date:"M d, Y"|default:"--" }}</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2 text-textGray text-[10px] font-bold uppercase tracking-wider"><i class="ph-fill ph-clock"></i> Hours</div>
+                    <span class="text-xs font-semibold text-textDark text-right">{{ doctor.working_hours|default:"--" }}</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2 text-textGray text-[10px] font-bold uppercase tracking-wider"><i class="ph-fill ph-drop text-red-400"></i> Blood</div>
+                    <span class="text-xs font-semibold text-textDark">{{ doctor.blood_type|default:"--" }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-1.5">
+                    <div class="flex items-center gap-2 text-textGray text-[10px] font-bold uppercase tracking-wider"><i class="ph-fill ph-phone"></i> Contact</div>
+                    <span class="text-xs font-semibold text-textDark">{{ doctor.contact_number|default:"--" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="bg-white rounded-[20px] shadow-card p-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-xs text-textDark" id="cal-month-year">--</span>
+                <div class="flex gap-1">
+                    <button onclick="changeMonth(-1)" class="text-textGray hover:text-primary w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><</button>
+                    <button onclick="changeMonth(1)" class="text-textGray hover:text-primary w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition">></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 text-center gap-y-1 text-[10px] mb-1 font-bold text-textGray">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="grid grid-cols-7 text-center gap-y-1 text-[10px]" id="calendar-days"></div>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    const allData = {{ patients_data_json|safe }};
+    let currentPatientId = null;
+
+    function switchPatient() {
+        const selector = document.getElementById('patientSelector');
+        const id = selector.value;
+        currentPatientId = id;
+
+        const hrEl = document.getElementById('card-hr');
+        const tempEl = document.getElementById('card-temp');
+        const envEl = document.getElementById('card-env');
+        const profileEmpty = document.getElementById('profile-empty');
+        const profileContent = document.getElementById('profile-content');
+        const noteInputArea = document.getElementById('note-input-area');
+        const statusBadge = document.getElementById('p-status-badge');
+        const historyLink = document.getElementById('p-history-link');
+        
+        // Photo Elements
+        const pInitialContainer = document.getElementById('p-initial-container');
+        const pPhoto = document.getElementById('p-photo');
+
+        if (id === 'all') {
+            hrEl.innerText = "--"; tempEl.innerText = "--"; envEl.innerText = "--";
+            profileEmpty.classList.remove('hidden'); profileContent.classList.add('hidden'); noteInputArea.classList.add('hidden');
+            renderNotes([]); 
+        } else {
+            const data = allData[id];
+            hrEl.innerText = data.heart_rate; tempEl.innerText = data.temp; envEl.innerText = `${data.room_temp}° / ${data.humidity}%`;
+            profileEmpty.classList.add('hidden'); profileContent.classList.remove('hidden');
+            
+            // --- SWITCH PHOTO LOGIC ---
+            if (data.photo_url) {
+                pPhoto.src = data.photo_url;
+                pPhoto.classList.remove('hidden');
+                pInitialContainer.classList.add('hidden');
+            } else {
+                // Show Initial if no photo
+                pInitialContainer.innerText = data.initial || "P";
+                pInitialContainer.classList.remove('hidden');
+                pPhoto.classList.add('hidden');
+            }
+
+            document.getElementById('p-name').innerText = data.name;
+            document.getElementById('p-age').innerText = data.age ? `${data.age} Years Old` : '--';
+            document.getElementById('p-blood').innerText = data.blood;
+            document.getElementById('p-contact').innerText = data.contact;
+            
+            document.getElementById('p-condition').innerText = data.condition;
+            document.getElementById('p-occupation').innerText = data.occupation;
+            document.getElementById('p-address').innerText = data.address;
+            
+            statusBadge.innerText = data.status;
+            statusBadge.className = `px-4 py-2 rounded-full text-xs font-bold border ${data.status === 'Active Monitoring' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`;
+            
+            historyLink.href = `/dashboard/patient/${id}/`;
+            
+            noteInputArea.classList.remove('hidden');
+            renderNotes(data.notes);
+        }
+    }
+
+    function renderNotes(notes) {
+        const list = document.getElementById('notes-list');
+        list.innerHTML = '';
+        if (!notes || notes.length === 0) {
+            list.innerHTML = '<p class="text-center text-xs text-textGray mt-10">No notes available.</p>';
+            return;
+        }
+        notes.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'p-2.5 bg-gray-50 rounded-xl flex justify-between items-start mb-2';
+            div.innerHTML = `
+                <div class="text-xs text-textDark"><p>${note.text}</p><span class="text-[9px] text-textGray">${note.date}</span></div>
+                <button onclick="deleteNote(${note.id})" class="text-red-400 hover:text-red-600 transition p-1"><i class="ph-bold ph-trash text-sm"></i></button>`;
+            list.appendChild(div);
+        });
+    }
+
+    function addNote() {
+        const input = document.getElementById('newNoteInput');
+        const text = input.value;
+        if(!text || !currentPatientId) return;
+        fetch("{% url 'add-note' %}", { method: "POST", body: JSON.stringify({ patient_id: currentPatientId, text: text }) })
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') {
+                allData[currentPatientId].notes.unshift({ id: data.note_id, text: text, date: data.date });
+                renderNotes(allData[currentPatientId].notes);
+                input.value = '';
+            }
+        });
+    }
+
+    function deleteNote(noteId) {
+        if(!confirm("Delete note?")) return;
+        fetch(`/dashboard/delete_note/${noteId}/`).then(res => res.json()).then(data => {
+            if(data.status === 'success') {
+                allData[currentPatientId].notes = allData[currentPatientId].notes.filter(n => n.id !== noteId);
+                renderNotes(allData[currentPatientId].notes);
+            }
+        });
+    }
+
+    let currentCalendarDate = new Date();
+    function initCalendar() {
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('cal-month-year').innerText = `${monthNames[currentCalendarDate.getMonth()]} ${currentCalendarDate.getFullYear()}`;
+        const firstDay = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = today.getMonth() === currentCalendarDate.getMonth() && today.getFullYear() === currentCalendarDate.getFullYear();
+        let html = '';
+        for(let i=0; i<firstDay; i++) html += `<span></span>`;
+        for(let i=1; i<=daysInMonth; i++) {
+            if(isCurrentMonth && i === today.getDate()) {
+                html += `<span class="bg-primary text-white rounded-lg py-1 flex items-center justify-center shadow-md cursor-pointer">${i}</span>`;
+            } else {
+                html += `<span class="py-1 text-textDark hover:bg-gray-100 rounded-lg cursor-pointer transition">${i}</span>`;
+            }
+        }
+        document.getElementById('calendar-days').innerHTML = html;
+    }
+    function changeMonth(offset) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset); initCalendar(); }
+    initCalendar();
+    switchPatient();
+</script>
+{% endblock %}

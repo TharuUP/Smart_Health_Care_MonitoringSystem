@@ -1,0 +1,204 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Patient Details{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { primary: '#4c6ef8', bgLight: '#f3f4f8', textDark: '#2d3748', textGray: '#a0aec0' },
+                fontFamily: { sans: ['Inter', 'sans-serif'] },
+            }
+        }
+    }
+</script>
+
+<div class="min-h-screen bg-bgLight p-6 font-sans text-textDark">
+    
+    <!-- Header / Back Button -->
+    <div class="max-w-7xl mx-auto mb-6 flex justify-between items-center">
+        <div>
+            <a href="{% url 'doctor-dashboard' %}" class="flex items-center gap-2 text-textGray hover:text-primary transition mb-1">
+                <i class="ph-bold ph-arrow-left"></i> Back to Dashboard
+            </a>
+            <h2 class="text-3xl font-bold text-textDark">
+                Patient: <span class="text-primary">{{ patient.user.first_name }} {{ patient.user.last_name }}</span>
+            </h2>
+        </div>
+        <div class="text-right">
+            <p class="text-sm text-textGray">Status</p>
+            <span class="px-3 py-1 rounded-full bg-green-100 text-green-600 font-bold text-xs">Active Monitoring</span>
+        </div>
+    </div>
+
+    <!-- GRID CONTENT -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- LEFT COLUMN: Add Prescription & History -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            
+            <!-- ADD PRESCRIPTION CARD -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm">
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-primary">
+                        <i class="ph-bold ph-pill text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold">Add New Prescription</h4>
+                </div>
+                
+                <form method="POST" class="grid grid-cols-2 gap-4">
+                    {% csrf_token %}
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-textGray uppercase mb-1">Medicine Name</label>
+                        <input type="text" name="medicine_name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-blue-100 transition" required>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-xs font-bold text-textGray uppercase mb-1">Dose</label>
+                        <input type="text" name="dose" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-blue-100 transition" placeholder="e.g. 1 tablet" required>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-textGray uppercase mb-1">Reminder Time</label>
+                        <input type="time" name="reminder_time" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-blue-100 transition" required>
+                    </div>
+                    <div class="col-span-2 mt-2">
+                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-[#3b5bdb] transition shadow-lg shadow-blue-200">Add to Schedule</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SENSOR HISTORY CARD -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm flex-1">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                        <i class="ph-bold ph-heartbeat text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold">Full Sensor History</h4>
+                </div>
+                
+                <div class="overflow-hidden rounded-xl border border-gray-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-xs uppercase text-textGray">
+                            <tr>
+                                <th class="p-4 font-bold">Time</th>
+                                <th class="p-4 font-bold">Heart Rate</th>
+                                <th class="p-4 font-bold">Body Temp</th>
+                                <th class="p-4 font-bold">Room Env</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm divide-y divide-gray-100">
+                            {% for reading in all_readings %}
+                            <tr class="hover:bg-blue-50 transition">
+                                <td class="p-4 text-textDark font-medium">{{ reading.timestamp|date:"M d, H:i" }}</td>
+                                <!-- Removed 'floatform' filter to fix error -->
+                                <td class="p-4 text-textDark font-bold">{{ reading.heart_rate }} <span class="text-xs font-normal text-textGray">bpm</span></td>
+                                <td class="p-4 text-textDark font-bold">{{ reading.body_temperature }} <span class="text-xs font-normal text-textGray">°C</span></td>
+                                <td class="p-4 text-textGray text-xs">
+                                    {% if reading.room_temperature %}
+                                        {{ reading.room_temperature }}° / {{ reading.humidity }}%
+                                    {% else %} -- {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-textGray">No sensor data received yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Info & Current Meds -->
+        <div class="flex flex-col gap-6">
+            
+            <!-- PATIENT INFO CARD -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm text-center relative overflow-hidden">
+                <div class="h-20 bg-gradient-to-r from-primary to-[#3b5bdb] w-full absolute top-0 left-0"></div>
+                
+                <!-- Profile Picture -->
+                <div class="relative w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl font-bold text-primary mx-auto mt-8 border-4 border-white shadow-md overflow-hidden">
+                    {% if patient.profile_photo %}
+                        <img src="{{ patient.profile_photo.url }}" class="w-full h-full object-cover">
+                    {% else %}
+                        {{ patient.user.first_name|first }}
+                    {% endif %}
+                </div>
+                
+                <h3 class="text-xl font-bold mt-3 text-textDark">{{ patient.user.first_name }} {{ patient.user.last_name }}</h3>
+                <p class="text-xs text-textGray mb-6">Username: {{ patient.user.username }}</p>
+                
+                <!-- Detailed Info List -->
+                <div class="flex flex-col gap-3 text-left px-2">
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Age</span>
+                        <span class="text-sm font-bold">{{ patient.age|default:"--" }} Years</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Condition</span>
+                        <span class="text-sm font-bold">{{ patient.medical_condition|default:"--" }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Occupation</span>
+                        <span class="text-sm font-bold">{{ patient.occupation|default:"--" }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Blood</span>
+                        <span class="text-sm font-bold">{{ patient.blood_type|default:"--" }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Contact</span>
+                        <span class="text-sm font-bold">{{ patient.contact_number|default:"--" }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-50 pb-2">
+                        <span class="text-xs text-textGray font-bold uppercase">Address</span>
+                        <span class="text-sm font-bold truncate max-w-[150px]" title="{{ patient.address }}">{{ patient.address|default:"--" }}</span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <span class="text-[10px] text-textGray font-bold uppercase block mb-1">API Key (Secret)</span>
+                        <div class="bg-gray-100 p-2 rounded-lg text-[10px] font-mono text-textDark break-all border border-gray-200 select-all">
+                            {{ patient.api_key }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVE PRESCRIPTIONS -->
+            <div class="bg-white p-6 rounded-[20px] shadow-sm flex-1">
+                <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <i class="ph-fill ph-prescription text-green-500"></i>
+                    Active Prescriptions
+                </h4>
+                
+                <div class="flex flex-col gap-3">
+                    {% for p in prescriptions %}
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-green-500 shadow-sm">
+                            <i class="ph-bold ph-pill"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-textDark text-sm">{{ p.medicine_name }}</h5>
+                            <p class="text-xs text-textGray">{{ p.dose }} • <span class="font-bold text-green-600">{{ p.reminder_time|time:"H:i A" }}</span></p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 text-textGray text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        No active prescriptions.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

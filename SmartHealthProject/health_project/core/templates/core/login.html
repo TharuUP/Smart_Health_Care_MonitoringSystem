@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Login - Smart Health{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+<div class="container-fluid p-0">
+    <div class="login-container">
+
+        <div class="login-image-side">
+            <h1 class="display-4 fw-bold">Smart Health</h1>
+            <p class="lead">Your 24/7 Remote Monitoring Partner</p>
+        </div>
+
+        <div class="login-form-side">
+            <div class="card p-4 shadow-lg" style="width: 25rem;">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Account Login</h3>
+                    
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                        </div>
+						<div>
+							<p class="text-center text-muted mt-4 small"> © 2025 SLIIT WD31 <br> Tharusha Bimsara Creation</p>
+						</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% block navbar %}
+{% endblock %}
+
+{% endblock %}

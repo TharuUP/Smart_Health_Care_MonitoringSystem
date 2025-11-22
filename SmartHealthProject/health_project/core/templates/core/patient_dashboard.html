@@ -1,0 +1,344 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { 
+                    primary: '#2563eb', 
+                    primaryDark: '#1e40af',
+                    bgLight: '#f0f2f5', 
+                    textDark: '#1f2937',
+                    textGray: '#6b7280' 
+                },
+                fontFamily: { 
+                    sans: ['Inter', 'sans-serif'],
+                    serif: ['DM Serif Display', 'serif']
+                }
+            }
+        }
+    }
+</script>
+
+<!-- FIX: Force full screen -->
+<style>
+    .container, .container-fluid { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .mt-4 { margin-top: 0 !important; }
+    nav.navbar { display: none !important; }
+    
+    /* Sidebar Gradient */
+    .sidebar-gradient {
+        background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    }
+</style>
+
+<div class="flex h-screen bg-blue-50/50 font-sans overflow-hidden">
+
+    <!-- ===== LEFT SIDEBAR (Matches your image) ===== -->
+    <aside class="w-64 sidebar-gradient text-white flex flex-col py-8 px-4 shadow-2xl z-50 flex-shrink-0">
+        
+        <!-- Profile Snippet -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-16 h-16 rounded-full border-2 border-white/50 overflow-hidden mb-3 shadow-md">
+                {% if patient.profile_photo %}
+                <img src="{{ patient.profile_photo.url }}" class="w-full h-full object-cover">
+                {% else %}
+                <img src="https://placehold.co/100x100/ffffff/2563eb?text={{ user.first_name|first }}" class="w-full h-full object-cover">
+                {% endif %}
+            </div>
+            <h3 class="text-base font-bold">{{ user.first_name }} {{ user.last_name }}</h3>
+            <i class="ph-fill ph-caret-down text-xs text-blue-200 mt-1"></i>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-col gap-1 flex-1 px-2">
+            <div class="px-3 py-2 text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Main</div>
+            
+            <a href="{% url 'patient-dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 bg-white/10 rounded-lg text-white text-sm font-medium shadow-sm border-l-4 border-white">
+                <i class="ph-bold ph-user text-lg"></i> Profile
+            </a>
+            
+            <a href="{% url 'patient-medications' %}" class="flex items-center gap-3 px-3 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-lg transition text-sm">
+                <i class="ph-bold ph-pill text-lg"></i> Medications
+            </a>
+            
+            <a href="{% url 'patient-history' %}" class="flex items-center gap-3 px-3 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-lg transition text-sm">
+                <i class="ph-bold ph-chart-line-up text-lg"></i> Vitals History
+            </a>
+        </nav>
+
+        <!-- Logout -->
+        <a href="{% url 'logout-page' %}" class="flex items-center gap-3 px-3 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-lg transition mt-auto text-sm">
+            <i class="ph-bold ph-sign-out text-lg"></i> Logout
+        </a>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+        
+        <!-- Page Header -->
+        <div class="flex justify-between items-end mb-8">
+            <h1 class="text-3xl font-serif text-textDark">Patient Profile</h1>
+            <div class="flex gap-4 text-textGray text-xs items-center">
+                <span>{% now "F j, Y, g:i A" %}</span>
+                <!-- Icons removed as requested -->
+            </div>
+        </div>
+
+        <!-- GRID LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- 1. PROFILE CARD (Top Left - Span 2) -->
+            <div class="lg:col-span-2 bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-start">
+                <!-- Avatar -->
+                <div class="relative flex-shrink-0">
+                    <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner">
+                        {% if patient.profile_photo %}
+                        <img src="{{ patient.profile_photo.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <img src="https://placehold.co/150x150/2563eb/ffffff?text={{ user.first_name|first }}" class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'patient-settings' %}" class="absolute bottom-1 right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm cursor-pointer">
+                        <i class="ph-bold ph-pencil-simple text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Info -->
+                <div class="flex-1 w-full">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <h2 class="text-xl font-bold text-textDark">{{ user.first_name }} {{ user.last_name }}</h2>
+                            <p class="text-xs text-textGray mt-0.5">Role: Patient</p>
+                        </div>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase">Active</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 mt-4">
+                        <div class="text-sm">
+                            <p class="text-textGray text-xs mb-0.5">Email</p>
+                            <p class="font-medium text-textDark">{{ user.email|default:"--" }}</p>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-textGray text-xs mb-0.5">Phone</p>
+                            <p class="font-medium text-textDark">{{ patient.contact_number|default:"--" }}</p>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-textGray text-xs mb-0.5">Occupation</p>
+                            <p class="font-medium text-textDark">{{ patient.occupation|default:"--" }}</p>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-textGray text-xs mb-0.5">Address</p>
+                            <p class="font-medium text-textDark truncate">{{ patient.address|default:"Sri Lanka" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SYSTEM HEALTH & SOS (Replaces Upcoming Meds) -->
+            <div class="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden">
+                <div class="flex justify-between items-center mb-4 z-10">
+                    <h3 class="font-bold text-base text-textDark">System Health</h3>
+                    
+                    <!-- ID: live-status-badge -->
+                    <div id="live-status-badge" class="flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold border transition-colors duration-300 
+                        {% if is_active %}bg-green-100 text-green-700 border-green-200{% else %}bg-red-100 text-red-700 border-red-200{% endif %}">
+                        <div id="live-status-dot" class="w-2 h-2 rounded-full {% if is_active %}bg-green-500 animate-pulse{% else %}bg-red-500{% endif %}"></div>
+                        <span id="live-status-text">{% if is_active %}ONLINE{% else %}OFFLINE{% endif %}</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 z-10">
+                    <div class="mb-4">
+                        <p class="text-xs text-gray-400 uppercase font-bold mb-1">Device Status</p>
+                        <p id="live-status-msg" class="text-sm font-medium {% if is_active %}text-gray-700{% else %}text-red-500{% endif %}">
+                            {% if is_active %}Sensors transmitting normally.{% else %}No data received. Check power.{% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="flex items-center gap-6 mb-4">
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold">Battery</p>
+                            <div class="flex items-center gap-1">
+                                <i id="live-batt-icon" class="ph-fill ph-battery-high text-green-500 text-lg"></i>
+                                <p id="live-battery" class="text-lg font-bold text-textDark">{{ battery }}%</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold">Signal</p>
+                            <div class="flex items-center gap-1">
+                                <i class="ph-fill ph-wifi-high text-blue-500 text-lg"></i>
+                                <p id="live-signal" class="text-lg font-bold text-textDark">{{ signal }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'send-sos' %}" onclick="return confirm('Are you sure you want to send an EMERGENCY ALERT?');" class="mt-auto w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-center hover:bg-red-600 hover:text-white transition flex items-center justify-center gap-2 z-10 border border-red-100">
+                    <i class="ph-fill ph-warning text-lg"></i> Emergency SOS
+                </a>
+                <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM ROW -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            
+            <!-- 3. LIVE VITALS (Bottom Left) -->
+            <div class="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-50 pb-4">
+                    <h3 class="font-bold text-base text-textDark">Basic Information (Live Vitals)</h3>
+                    <span class="text-[10px] text-textGray animate-pulse">● Live Updating</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- Heart Rate -->
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wide">Heart Rate</p>
+                        <div class="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                            <i class="ph-fill ph-heartbeat text-2xl text-blue-500"></i>
+                            <div>
+                                <!-- REMOVED floatform -->
+                                <span id="live-hr" class="text-2xl font-bold text-textDark">{% if latest_reading %}{{ latest_reading.heart_rate }}{% else %}--{% endif %}</span>
+                                <span class="text-xs text-gray-500">bpm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body Temp -->
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wide">Body Temp</p>
+                        <div class="flex items-center gap-3 p-4 bg-teal-50/50 rounded-2xl border border-teal-100/50">
+                            <i class="ph-fill ph-thermometer-simple text-2xl text-teal-500"></i>
+                            <div>
+                                <!-- REMOVED floatform -->
+                                <span id="live-temp" class="text-2xl font-bold text-textDark">{% if latest_reading %}{{ latest_reading.body_temperature }}{% else %}--{% endif %}</span>
+                                <span class="text-xs text-gray-500">°C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Room Env -->
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wide">Room Env</p>
+                        <div class="flex items-center gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100/50">
+                            <i class="ph-fill ph-house-line text-2xl text-purple-500"></i>
+                            <div>
+                                <span class="text-xl font-bold text-textDark">
+                                    <!-- REMOVED floatform -->
+                                    <span id="live-room">{% if latest_reading %}{{ latest_reading.room_temperature }}{% else %}--{% endif %}</span>°
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    / <span id="live-humidity">{% if latest_reading %}{{ latest_reading.humidity }}{% else %}--{% endif %}</span>%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extra Personal Info -->
+                <div class="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-50">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase mb-1">Age</p>
+                        <div class="text-sm font-semibold text-textDark">
+                            {{ patient.age|default:"--" }} Years
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase mb-1">Condition</p>
+                        <div class="text-sm font-semibold text-textDark">
+                            {{ patient.medical_condition|default:"Healthy" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. HISTORY LIST (Bottom Right) -->
+            <div class="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-base text-textDark">Recent Readings</h3>
+                    <span class="text-xs text-textGray">Latest 5</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto max-h-64 space-y-0">
+                    {% for reading in all_readings %}
+                    <div class="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 group hover:bg-gray-50 px-2 rounded-lg transition cursor-default">
+                        <div class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+                            <i class="ph-bold ph-check text-xs"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h5 class="font-bold text-xs text-textDark truncate">Sensor Update</h5>
+                            <p class="text-[10px] text-textGray">{{ reading.timestamp|date:"M d, H:i" }}</p>
+                        </div>
+                        <div class="text-right">
+                            <!-- REMOVED floatform -->
+                            <div class="font-bold text-xs">{{ reading.heart_rate }} <span class="font-normal text-[9px] text-textGray">bpm</span></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 text-textGray text-xs">
+                        No history available.
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <a href="{% url 'patient-history' %}" class="w-full mt-4 py-2.5 bg-gray-50 text-textDark text-xs font-bold rounded-xl hover:bg-gray-100 transition border border-gray-200 block text-center">
+                    View Full History
+                </a>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- JAVASCRIPT POLLING (UPDATES EVERY 3 SECONDS) -->
+<script>
+    function fetchVitals() {
+        fetch("{% url 'patient-live-data' %}")
+        .then(response => response.json())
+        .then(data => {
+            // 1. Update Numbers
+            document.getElementById('live-hr').innerText = data.heart_rate;
+            document.getElementById('live-temp').innerText = data.body_temp;
+            document.getElementById('live-room').innerText = data.room_temp;
+            document.getElementById('live-humidity').innerText = data.humidity;
+            document.getElementById('live-battery').innerText = data.battery + (data.battery !== '--' ? '%' : '');
+            document.getElementById('live-signal').innerText = data.signal;
+
+            // 2. Update Status (Active/Offline)
+            const badge = document.getElementById('live-status-badge');
+            const dot = document.getElementById('live-status-dot');
+            const text = document.getElementById('live-status-text');
+            const msg = document.getElementById('live-status-msg');
+
+            if (data.is_active) {
+                badge.className = "flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold border transition-colors duration-300 bg-green-100 text-green-700 border-green-200";
+                dot.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+                text.innerText = "ONLINE";
+                msg.innerText = "Sensors transmitting normally.";
+                msg.className = "text-sm font-medium text-gray-700";
+            } else {
+                badge.className = "flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold border transition-colors duration-300 bg-red-100 text-red-700 border-red-200";
+                dot.className = "w-2 h-2 rounded-full bg-red-500";
+                text.innerText = "OFFLINE";
+                msg.innerText = "No data received. Check power.";
+                msg.className = "text-sm font-medium text-red-500";
+            }
+        })
+        .catch(error => console.error('Error fetching vitals:', error));
+    }
+
+    // Run every 3 seconds
+    setInterval(fetchVitals, 3000);
+</script>
+{% endblock %}
