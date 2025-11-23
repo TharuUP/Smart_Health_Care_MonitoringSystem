@@ -105,3 +105,5 @@ LOGIN_REDIRECT_URL = 'home'
 # --- TELEGRAM BOT CONFIGURATION ---
 # Now it reads from the hidden .env file
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
