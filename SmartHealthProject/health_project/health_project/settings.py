@@ -18,7 +18,13 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'f7fadfa51ed9.ngrok-free.app',
+    '*',
+    '192.168.8.116'
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -107,3 +113,8 @@ LOGIN_REDIRECT_URL = 'home'
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://93a3f0acdcc7.ngrok-free.app',
+]
+
